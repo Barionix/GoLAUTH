@@ -1,0 +1,39 @@
+version: "3.7"
+services:
+  db:
+    image: mysql:8.0.23
+    container_name: db
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_DATABASE: authdb
+      MYSQL_USER: authuser
+      MYSQL_PASSWORD: pass
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+    volumes:
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+
+    networks:
+      - application
+  app:
+    build: .
+    container_name: app
+    ports:
+      - 8080:8080
+      - 3000:3000
+    depends_on:
+      - db
+    networks:
+      - application
+    environment:
+      profile: prod
+      db_pass: pass
+    volumes:
+      - ./server/migrations:/migrations
+    command: >
+      sh -c "sleep 30 && ./server"
+
+
+networks:
+  application:
+    driver: bridge
